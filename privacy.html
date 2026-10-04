@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeShot — Privacy Policy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.7; color: #333; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .updated { color: #888; font-size: 14px; margin-bottom: 32px; }
+    h2 { font-size: 18px; margin: 28px 0 12px; }
+    p { margin-bottom: 12px; }
+    ul { margin: 0 0 12px 24px; }
+    li { margin-bottom: 6px; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>SafeShot — Privacy Policy</h1>
+  <p class="updated">Last updated: October 4, 2026 · 最后更新：2026 年 10 月 4 日</p>
+  <p class="updated"><a href="#en">English</a> · <a href="#zh">简体中文</a></p>
+
+  <!-- ==================== ENGLISH ==================== -->
+  <section id="en" lang="en">
+    <p class="updated"><strong>English</strong></p>
+
+    <h2>Overview</h2>
+    <p>SafeShot Secure Screenshot is a browser extension that masks sensitive information on a web page locally, then captures a screenshot of the current tab. This policy explains what the extension does and does not do with your data. It applies to the extension itself and does not cover the third-party websites you visit.</p>
+
+    <h2>No Data Collection</h2>
+    <p>SafeShot does <strong>not</strong> collect, store, or transmit any personal data or usage information to external servers. Specifically:</p>
+    <ul>
+      <li>No browsing history is collected or uploaded</li>
+      <li>No typed text, form input, or page content is sent to any server</li>
+      <li>No analytics, tracking, or telemetry is performed</li>
+      <li>No cookies or identifiers are created for tracking purposes</li>
+      <li>No account, name, email address, or device information is requested or stored</li>
+      <li>No advertising identifiers or crash reports are collected</li>
+    </ul>
+
+    <h2>What the Extension Accesses</h2>
+    <ul>
+      <li>The visible area of the current tab — but only after you explicitly trigger a capture using the toolbar button, the right-click menu, or the <code>Alt+Shift+S</code> shortcut. Access is granted per action through the <code>activeTab</code> permission; SafeShot has no standing access to all websites.</li>
+      <li>Page text in the active tab, only while a capture is in progress, so that your redaction rules can be matched locally in the browser.</li>
+      <li>SafeShot declares no <code>host_permissions</code> and does not automatically inject scripts into every site you visit. Scripts are injected on demand into the single tab you act on.</li>
+    </ul>
+
+    <h2>Local Storage Only</h2>
+    <p>All extension settings are stored entirely within your browser using <code>chrome.storage.local</code>. This data never leaves your device. The stored keys are:</p>
+    <ul>
+      <li><code>enabled</code> — whether masking is turned on</li>
+      <li><code>customRules</code> — your own regular expressions</li>
+      <li><code>whitelist</code> — sites where masking is skipped</li>
+      <li><code>maskStyle</code> — how masks are drawn (mode, block, color)</li>
+      <li><code>lang</code> — interface language (auto / English / Chinese)</li>
+    </ul>
+
+    <h2>How Images Are Handled</h2>
+    <ul>
+      <li>The visible tab is captured locally by the browser as a PNG held in memory.</li>
+      <li>Masking blocks are drawn onto that image on a local canvas — the redaction happens <strong>before</strong> the image is ever written anywhere.</li>
+      <li>The finished image is copied to your system clipboard. If the clipboard is unavailable, it is saved as a PNG into your downloads folder instead.</li>
+    </ul>
+    <p>SafeShot does not upload images to any server, does not create backups, and does not keep any history of past screenshots.</p>
+
+    <h2>Network &amp; Data Transmission</h2>
+    <p>SafeShot makes <strong>no network requests</strong>. The extension contains no analytics, no telemetry, no CDN or remote font references, and does not load any code from the internet. This can be verified directly in the extension's source code.</p>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li><code>activeTab</code> — read the pixels of the current tab when you trigger a capture</li>
+      <li><code>scripting</code> — inject the scanning and masking code into the tab you act on</li>
+      <li><code>storage</code> — save your settings locally</li>
+      <li><code>contextMenus</code> — add the right-click SafeShot menu item</li>
+      <li><code>clipboardWrite</code> — copy the finished screenshot to your clipboard</li>
+      <li><code>offscreen</code> — perform the clipboard write when the window cannot do it directly</li>
+      <li><code>downloads</code> — save the PNG when the clipboard is unavailable</li>
+    </ul>
+    <p>SafeShot requests no <code>host_permissions</code>.</p>
+
+    <h2>Third-Party Services</h2>
+    <p>SafeShot does not integrate with any third-party services, APIs, SDKs, analytics providers, or advertising networks. No third-party code is bundled with the extension.</p>
+
+    <h2>Data Retention &amp; Deletion</h2>
+    <ul>
+      <li>Settings in <code>chrome.storage.local</code> are retained until you change them or until you uninstall the extension.</li>
+      <li>Screenshots exist only in your clipboard (managed by your operating system) or as a file you chose to download (managed by you). SafeShot keeps no copies of them.</li>
+      <li>Uninstalling the extension removes all stored settings. You can also clear them at any time from the extension's settings page, or by clearing extension storage in your browser.</li>
+    </ul>
+
+    <h2>Your Rights</h2>
+    <p>Because SafeShot collects no personal data, there is no personal data held by us for you to access, correct, or export. You can:</p>
+    <ul>
+      <li>Turn masking off, or change any setting, at any time</li>
+      <li>Delete all stored settings by clearing extension storage</li>
+      <li>Uninstall the extension entirely</li>
+    </ul>
+    <p>If you are located in the EEA, the UK, or California, you are welcome to contact us with any question about your rights, and we will respond within the time required by applicable law.</p>
+
+    <h2>Children's Privacy</h2>
+    <p>SafeShot is not directed at children under 13 (or the equivalent minimum age in your jurisdiction), and it does not knowingly collect personal information from anyone, including children.</p>
+
+    <h2>Changes to This Policy</h2>
+    <!-- REPLACE-REPO -->
+    <p>If this privacy policy is updated, the changes will be published in the extension's source code repository at <a href="https://github.com/xuhongwang/safeshot">github.com/xuhongwang/safeshot</a>.</p>
+
+    <h2>Contact</h2>
+    <!-- REPLACE-REPO -->
+    <p>For questions about this privacy policy, please open an issue at the extension's <a href="https://github.com/xuhongwang/safeshot/issues">GitHub repository</a>.</p>
+  </section>
+
+  <hr>
+
+  <!-- ==================== 简体中文 ==================== -->
+  <section id="zh" lang="zh-CN">
+    <p class="updated"><strong>简体中文</strong></p>
+
+    <h2>概述</h2>
+    <p>SafeShot 安全截图助手是一款浏览器扩展，先在本地对网页中的敏感信息进行打码，再对当前标签页截图。本政策说明该扩展对您的数据做了什么、以及<em>没有</em>做什么。本政策仅适用于扩展本身，不涉及您所访问的第三方网站。</p>
+
+    <h2>不收集任何数据</h2>
+    <p>SafeShot <strong>不会</strong>向任何外部服务器收集、存储或传输任何个人数据或使用情况信息。具体包括：</p>
+    <ul>
+      <li>不收集、不上传浏览历史</li>
+      <li>不向任何服务器发送键入的文本、表单内容或网页内容</li>
+      <li>不做任何数据分析、追踪或埋点上报</li>
+      <li>不创建任何用于追踪的 Cookie 或标识符</li>
+      <li>不索取、不存储账号、姓名、邮箱或设备信息</li>
+      <li>不收集广告标识符或崩溃报告</li>
+    </ul>
+
+    <h2>扩展会访问哪些信息</h2>
+    <ul>
+      <li>当前标签页的可视区域 —— 但<strong>仅在您主动触发截图时</strong>（工具栏按钮、右键菜单或 <code>Alt+Shift+S</code> 快捷键）。该访问通过 <code>activeTab</code> 权限按次授予，SafeShot 不具备对所有网站的常驻访问权。</li>
+      <li>仅在截图进行期间读取当前标签页的页面文本，用于在浏览器本地匹配您的打码规则。</li>
+      <li>SafeShot 未声明任何 <code>host_permissions</code>，也不会自动向您访问的每个网站注入脚本；脚本只在您操作时按需注入到那一个标签页。</li>
+    </ul>
+
+    <h2>仅本地存储</h2>
+    <p>所有扩展设置均通过 <code>chrome.storage.local</code> 完整保存在您的浏览器中，这些数据不会离开您的设备。存储的键包括：</p>
+    <ul>
+      <li><code>enabled</code> —— 是否开启打码</li>
+      <li><code>customRules</code> —— 您自定义的正则规则</li>
+      <li><code>whitelist</code> —— 跳过打码的站点白名单</li>
+      <li><code>maskStyle</code> —— 打码样式（模式、色块、颜色）</li>
+      <li><code>lang</code> —— 界面语言（自动 / 英文 / 中文）</li>
+    </ul>
+
+    <h2>截图与剪贴板的去向</h2>
+    <ul>
+      <li>由浏览器在本地将可视标签页截取为 PNG，仅保存在内存中。</li>
+      <li>打码色块在本地 canvas 上直接绘制到该图片 —— 打码发生在图片被写入任何位置之<strong>前</strong>。</li>
+      <li>处理完成的图片复制到系统剪贴板；若剪贴板不可用，则改为保存为 PNG 文件到您的下载文件夹。</li>
+    </ul>
+    <p>SafeShot 不会将图片上传到任何服务器，不创建备份，也不保留任何历史截图记录。</p>
+
+    <h2>网络与数据传输</h2>
+    <p>SafeShot <strong>不发起任何网络请求</strong>。扩展内不含任何统计、埋点、CDN 或远程字体引用，也不会从互联网加载任何代码。这一点可直接在扩展源码中核验。</p>
+
+    <h2>权限说明</h2>
+    <ul>
+      <li><code>activeTab</code> —— 您触发截图时读取当前标签页画面</li>
+      <li><code>scripting</code> —— 向您操作的标签页注入扫描与打码代码</li>
+      <li><code>storage</code> —— 在本地保存您的设置</li>
+      <li><code>contextMenus</code> —— 添加右键菜单中的 SafeShot 项</li>
+      <li><code>clipboardWrite</code> —— 将完成的截图复制到剪贴板</li>
+      <li><code>offscreen</code> —— 当窗口无法直接写入剪贴板时，由离屏文档代为写入</li>
+      <li><code>downloads</code> —— 剪贴板不可用时保存 PNG 文件</li>
+    </ul>
+    <p>SafeShot 不申请任何 <code>host_permissions</code>。</p>
+
+    <h2>第三方服务</h2>
+    <p>SafeShot 不接入任何第三方服务、API、SDK、统计服务或广告网络，扩展中也未捆绑任何第三方代码。</p>
+
+    <h2>数据保留与删除</h2>
+    <ul>
+      <li><code>chrome.storage.local</code> 中的设置会一直保留，直到您修改它们或卸载扩展。</li>
+      <li>截图只存在于系统剪贴板中（由操作系统管理），或您自行下载的文件中（由您管理）。SafeShot 不保留任何副本。</li>
+      <li>卸载扩展会移除全部已存储的设置；您也可以随时在扩展设置页清除，或在浏览器中清除扩展存储。</li>
+    </ul>
+
+    <h2>您的权利</h2>
+    <p>由于 SafeShot 不收集任何个人数据，我们也就没有可供您访问、更正或导出的个人数据。您可以：</p>
+    <ul>
+      <li>随时关闭打码或修改任意设置</li>
+      <li>通过清除扩展存储，删除全部已保存设置</li>
+      <li>随时彻底卸载本扩展</li>
+    </ul>
+    <p>如果您位于欧盟经济区、英国或加州，欢迎就您的权利与我们联系，我们将在适用法律要求的期限内答复。</p>
+
+    <h2>儿童隐私</h2>
+    <p>SafeShot 面向 13 周岁以下（或您所在司法辖区的等同最低年龄）儿童以外的用户，且不会有意收集任何人（包括儿童）的个人信息。</p>
+
+    <h2>政策变更</h2>
+    <!-- REPLACE-REPO -->
+    <p>如本隐私政策发生更新，变更将发布在扩展源码仓库 <a href="https://github.com/xuhongwang/safeshot">github.com/xuhongwang/safeshot</a> 中。</p>
+
+    <h2>联系我们</h2>
+    <!-- REPLACE-REPO -->
+    <p>如对本隐私政策有任何疑问，请在扩展的 <a href="https://github.com/xuhongwang/safeshot/issues">GitHub 仓库</a>提交 issue。</p>
+  </section>
+</body>
+</html>

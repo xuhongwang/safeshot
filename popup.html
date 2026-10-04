@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeShot</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- 主视图 -->
+  <div id="main-view" class="view">
+    <div class="brand">
+      <div class="logo">✂️ SafeShot</div>
+      <div class="slogan" data-i18n="popup.slogan">安全截图 · 零依赖</div>
+    </div>
+    <div id="status" class="status" data-i18n="popup.statusReady">就绪</div>
+    <button id="capture-btn" class="primary" data-i18n="popup.btnCapture">📷 打码截图</button>
+    <button id="settings-btn" data-i18n="popup.btnSettings">⚙️ 设置</button>
+  </div>
+
+  <!-- 设置视图 -->
+  <div id="settings-view" class="view hidden">
+    <div class="view-head">
+      <button class="back-btn" id="back-btn" data-i18n="popup.back">‹ 返回</button>
+      <span data-i18n="popup.settings">设置</span>
+    </div>
+
+    <div class="switch-group">
+      <label class="switch-row">
+        <span data-i18n="popup.enableAutoScan">启用自动扫描</span>
+        <input type="checkbox" id="global-enable" checked>
+        <span class="switch"></span>
+      </label>
+      <p class="hint" data-i18n="popup.hintAutoScan">开启后截图前自动识别敏感信息并打码；关闭后仍可截图和手动打码</p>
+    </div>
+
+    <div class="section">
+      <h4 data-i18n="popup.langSection">界面语言</h4>
+      <p class="hint" data-i18n="popup.hintLang">切换扩展界面与提示的语言，「自动」跟随浏览器语言</p>
+      <div class="input-row">
+        <select id="ui-lang">
+          <option value="auto" data-i18n="popup.langAuto">自动（跟随浏览器）</option>
+          <option value="zh" data-i18n="popup.langZh">中文</option>
+          <option value="en" data-i18n="popup.langEn">English</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4 data-i18n="popup.maskStyle">遮罩样式</h4>
+      <p class="hint" data-i18n="popup.hintMaskStyle">选择截图打码的遮罩效果</p>
+      <div class="input-row">
+        <select id="mask-mode">
+          <option value="mosaic" data-i18n="popup.maskMosaic">马赛克</option>
+          <option value="color" data-i18n="popup.maskColor">纯色</option>
+        </select>
+      </div>
+      <div id="mask-block-row" class="input-row">
+        <span class="inline-label" data-i18n="popup.blockSize">块大小</span>
+        <input type="range" id="mask-block" min="4" max="32" step="1" value="12">
+        <span id="mask-block-val" class="inline-val">12px</span>
+      </div>
+      <div id="mask-color-row" class="input-row hidden">
+        <span class="inline-label" data-i18n="popup.color">颜色</span>
+        <input type="color" id="mask-color" value="#000000">
+      </div>
+    </div>
+
+    <div class="section" id="shortcut-section">
+      <h4 data-i18n="popup.shortcut">快捷键</h4>
+      <p class="hint" data-i18n="popup.hintShortcut">在任意页面按快捷键启动截图</p>
+      <div class="input-row">
+        <span class="inline-label" data-i18n="popup.currentShortcut">当前键位</span>
+        <span id="shortcut-display" class="shortcut-key">…</span>
+        <button id="edit-shortcut" class="mini-btn" data-i18n="popup.edit">修改</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4 data-i18n="popup.whitelist">域名白名单</h4>
+      <p class="hint" data-i18n="popup.hintWhitelist">白名单内的网站点击截图时会跳过扫描</p>
+      <div class="input-row">
+        <input type="text" id="whitelist-input" data-i18n-placeholder="popup.whitelistPlaceholder" placeholder="例如：github.com">
+        <button id="add-whitelist" class="mini-btn" data-i18n="popup.add">添加</button>
+      </div>
+      <ul id="whitelist-list" class="list"></ul>
+    </div>
+
+    <div class="section">
+      <h4 data-i18n="popup.customRules">自定义正则规则</h4>
+      <p class="hint" data-i18n="popup.hintCustomRules">添加你自己的敏感信息识别规则</p>
+      <div class="input-row">
+        <input type="text" id="custom-pattern" data-i18n-placeholder="popup.rulePlaceholder" placeholder="正则，如：[A-Z]{2}\\d{6}">
+        <button id="add-rule" class="mini-btn" data-i18n="popup.add">添加</button>
+      </div>
+      <ul id="custom-rule-list" class="list"></ul>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="rules.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

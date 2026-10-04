@@ -1,0 +1,18 @@
+{
+  "extension_name": {
+    "message": "SafeShot Secure Screenshot",
+    "description": "Extension name"
+  },
+  "extension_description": {
+    "message": "Masks sensitive info on the page before capturing, to protect your privacy. Zero dependencies, no external requests.",
+    "description": "Extension description"
+  },
+  "action_title": {
+    "message": "SafeShot Secure Screenshot",
+    "description": "Toolbar button tooltip"
+  },
+  "command_capture_desc": {
+    "message": "SafeShot redacted screenshot",
+    "description": "Keyboard shortcut description"
+  }
+}
