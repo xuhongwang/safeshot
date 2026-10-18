@@ -34,9 +34,12 @@
     if (rect.width === 0 || rect.height === 0) return null;
     const mask = document.createElement('div');
     mask.className = 'safeshot-mask';
+    // 使用 absolute + 文档坐标，遮罩随页面滚动跟随目标元素
+    const pageX = rect.left + window.scrollX;
+    const pageY = rect.top + window.scrollY;
     mask.style.cssText =
-      'position:fixed;z-index:2147483647;left:' + rect.left + 'px;' +
-      'top:' + rect.top + 'px;width:' + rect.width + 'px;height:' + rect.height +
+      'position:absolute;z-index:2147483647;left:' + pageX + 'px;' +
+      'top:' + pageY + 'px;width:' + rect.width + 'px;height:' + rect.height +
       'px;pointer-events:none;' + previewStyleFor(false);
     document.documentElement.appendChild(mask);
     return { type: 'div', mask: mask, el: el, rect: { x: rect.left, y: rect.top, w: rect.width, h: rect.height } };
@@ -125,6 +128,25 @@
       });
     }
 
+    // 扫描 input 值：text/tel/email 等输入框中的敏感信息
+    const inputSelector = 'input[type="text"], input[type="tel"], input[type="email"], input[type="search"], input:not([type]), textarea:not([name*="password" i])';
+    let valueInputs = [];
+    try { valueInputs = document.querySelectorAll(inputSelector); } catch (e) { valueInputs = []; }
+    valueInputs.forEach(function (el) {
+      if (el.closest && el.closest('.safeshot-mask')) return;
+      const val = el.value || '';
+      if (!val || !val.trim()) return;
+      let hit = false;
+      for (const item of regexRules) {
+        const re = new RegExp(item.rule.pattern, (item.rule.flags || 'g').replace(/g/g, '') + 'g');
+        if (re.test(val)) { hit = true; break; }
+      }
+      if (hit) {
+        const m = maskElement(el);
+        if (m) masks.push(m);
+      }
+    });
+
     const walker = document.createTreeWalker(
       document.body || document.documentElement,
       NodeFilter.SHOW_TEXT,
@@ -140,9 +162,15 @@
       }
     );
 
+    // 先收集全部文本节点再处理：maskTextNode 会替换 DOM，
+    // 若边遍历边修改会导致 TreeWalker 状态失效、后续节点被跳过
+    const textNodes = [];
     let n;
     while ((n = walker.nextNode())) {
-      maskTextNode(n, regexRules);
+      textNodes.push(n);
+    }
+    for (const node of textNodes) {
+      if (node.parentNode) maskTextNode(node, regexRules);
     }
 
     return masks.length;
@@ -181,12 +209,12 @@
     const rects = [];
     for (const item of masks) {
       if (item.type === 'div' && item.rect) {
-        rects.push({ x: item.rect.x, y: item.rect.y, w: item.rect.w, h: item.rect.h });
+        rects.push({ x: item.rect.x + window.scrollX, y: item.rect.y + window.scrollY, w: item.rect.w, h: item.rect.h });
       } else if (item.type === 'text' && item.textRects) {
         for (const span of item.textRects) {
           const r = span.getBoundingClientRect();
           if (r.width > 0 && r.height > 0) {
-            rects.push({ x: r.left, y: r.top, w: r.width, h: r.height });
+            rects.push({ x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width, h: r.height });
           }
         }
       }
@@ -197,10 +225,16 @@
   function createOverlay(autoMasks, sendResponseCallback) {
     destroyOverlay();
 
+    // 隐藏 scan 阶段的原始遮罩，避免与 overlay 层叠加显示两层
+    document.querySelectorAll('.safeshot-mask, .safeshot-mask-text').forEach(function (el) {
+      el.style.visibility = 'hidden';
+    });
+
     const overlay = document.createElement('div');
     overlay.id = 'safeshot-overlay';
+    // left/right 而非 width:100vw，避免覆盖原生滚动条导致无法拖拽滚动
     overlay.style.cssText = `
-      position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:2147483646;
+      position:fixed;left:0;right:0;top:0;bottom:0;z-index:2147483646;
       background:rgba(0,0,0,0.15);cursor:crosshair;font-family:system-ui,sans-serif;
     `;
 
@@ -219,6 +253,9 @@
         padding:5px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;
         font-size:12px;cursor:pointer;color:#374151;
       ">${t('ui.cancel')}</button>
+      <label for="safeshot-fullpage" style="display:flex;align-items:center;gap:5px;font-size:12px;color:#374151;cursor:pointer;">
+        <input type="checkbox" id="safeshot-fullpage">${t('ui.fullPage')}
+      </label>
       <button id="safeshot-confirm" style="
         padding:5px 12px;border:1px solid #2563eb;border-radius:6px;background:#2563eb;
         font-size:12px;cursor:pointer;color:#fff;font-weight:600;
@@ -228,6 +265,12 @@
     overlay.appendChild(toolbar);
     document.documentElement.appendChild(overlay);
 
+    let fullPageOn = false;
+    const fpCheckbox = document.getElementById('safeshot-fullpage');
+    fpCheckbox.addEventListener('change', () => {
+      fullPageOn = fpCheckbox.checked;
+    });
+
     const userMasks = [];
     let isDrawing = false;
     let drawStart = null;
@@ -236,23 +279,30 @@
     function redrawOverlayMasks() {
       overlay.querySelectorAll('.safeshot-overlay-mask').forEach(el => el.remove());
       const all = autoMasks.concat(userMasks);
+      const sx = window.scrollX;
+      const sy = window.scrollY;
       all.forEach((m, i) => {
         const div = document.createElement('div');
         div.className = 'safeshot-overlay-mask';
         div.dataset.index = i;
         div.style.cssText = `
-          position:fixed;left:${m.x}px;top:${m.y}px;width:${m.w}px;height:${m.h}px;
+          position:fixed;left:${m.x - sx}px;top:${m.y - sy}px;width:${m.w}px;height:${m.h}px;
           z-index:2147483647;cursor:pointer;
         ` + previewStyleFor(false);
-        div.title = i >= autoMasks.length ? t('mask.deleteThis') : t('mask.auto');
-        overlay.appendChild(div);
+        div.title = i >= autoMasks.length ? t('mask.deleteThis') : t('mask.auto') + ' · ' + t('mask.deleteThis');
+        // 插入到 toolbar 之前，确保工具条始终在遮罩之上
+        overlay.insertBefore(div, toolbar);
       });
     }
 
     redrawOverlayMasks();
 
+    // 页面滚动时遮罩跟随（坐标为文档坐标，渲染时换算为视口坐标）
+    window.addEventListener('scroll', redrawOverlayMasks, { passive: true });
+    window.addEventListener('resize', redrawOverlayMasks, { passive: true });
+
     overlay.addEventListener('mousedown', (e) => {
-      if (e.target.id === 'safeshot-cancel' || e.target.id === 'safeshot-confirm') return;
+      if (toolbar.contains(e.target)) return;
       if (e.target.classList.contains('safeshot-overlay-mask')) return;
       isDrawing = true;
       drawStart = { x: e.clientX, y: e.clientY };
@@ -288,7 +338,7 @@
       const w = Math.abs(e.clientX - drawStart.x);
       const h = Math.abs(e.clientY - drawStart.y);
       if (w > 4 && h > 4) {
-        userMasks.push({ x, y, w, h });
+        userMasks.push({ x: x + window.scrollX, y: y + window.scrollY, w: w, h: h });
         redrawOverlayMasks();
       }
     });
@@ -298,14 +348,25 @@
         const idx = parseInt(e.target.dataset.index, 10);
         if (idx >= autoMasks.length) {
           userMasks.splice(idx - autoMasks.length, 1);
-          redrawOverlayMasks();
+        } else {
+          autoMasks.splice(idx, 1);
         }
+        redrawOverlayMasks();
       }
     });
 
     function confirmOverlay() {
       document.removeEventListener('keydown', onKeydown);
-      const allMasks = autoMasks.concat(userMasks);
+      window.removeEventListener('scroll', redrawOverlayMasks);
+      window.removeEventListener('resize', redrawOverlayMasks);
+      const sx = window.scrollX;
+      const sy = window.scrollY;
+      // 视口模式：转视口坐标（captureVisibleTab 截当前视口）；整页模式：保持文档坐标
+      const allMasks = fullPageOn
+        ? autoMasks.concat(userMasks)
+        : autoMasks.concat(userMasks).map(function (m) {
+            return { x: m.x - sx, y: m.y - sy, w: m.w, h: m.h };
+          });
       const clipState = document.documentElement.getAttribute('data-safeshot-clip');
       const hasMW = !!window.__safeshotMW;
       destroyOverlay();
@@ -320,6 +381,7 @@
         sendResponseCallback({
           canceled: false,
           masks: allMasks,
+          fullPage: fullPageOn,
           clipMode: clipState === 'pending' || clipState === 'checking' ? 'clipboard' : (clipState === 'unsupported' ? 'exec' : 'offscreen'),
           clipState: clipState || 'null',
           hasMW: hasMW
@@ -329,6 +391,8 @@
 
     document.getElementById('safeshot-cancel').addEventListener('click', () => {
       document.removeEventListener('keydown', onKeydown);
+      window.removeEventListener('scroll', redrawOverlayMasks);
+      window.removeEventListener('resize', redrawOverlayMasks);
       document.dispatchEvent(new CustomEvent('safeshot-clip-cancel'));
       destroyOverlay();
       restore();
@@ -347,6 +411,8 @@
         else confirmOverlay();
       } else if (e.key === 'Escape') {
         document.removeEventListener('keydown', onKeydown);
+        window.removeEventListener('scroll', redrawOverlayMasks);
+        window.removeEventListener('resize', redrawOverlayMasks);
         document.dispatchEvent(new CustomEvent('safeshot-clip-cancel'));
         destroyOverlay();
         restore();
@@ -554,6 +620,104 @@
     setTimeout(() => toast.remove(), 2000);
   }
 
+  // ============ 整页截图（分片拼接） ============
+
+  let fp = null;
+
+  function fpCleanup() {
+    if (fp && fp.canvas) {
+      fp.canvas.width = 0;
+      fp.canvas.height = 0;
+    }
+    fp = null;
+  }
+
+  function fpLoadImage(src) {
+    return new Promise(function (resolve, reject) {
+      const img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error(t('err.imgLoadFailed'))); };
+      img.src = src;
+    });
+  }
+
+  async function fpAddChunk(msg) {
+    if (!fp) throw new Error(t('err.fullPageFailed'));
+    const img = await fpLoadImage(msg.dataUrl);
+    msg.dataUrl = null;
+    if (!fp.canvas) {
+      fp.scale = img.naturalWidth / fp.vpW;
+      const w = Math.round(fp.pageW * fp.scale);
+      const h = Math.round(fp.pageH * fp.scale);
+      if (w > 32767 || h > 32767 || w * h > 268435456 || w <= 0 || h <= 0) {
+        img.src = '';
+        fpCleanup();
+        throw new Error(t('err.fullPageTooLarge'));
+      }
+      fp.canvas = document.createElement('canvas');
+      fp.canvas.width = w;
+      fp.canvas.height = h;
+      fp.ctx = fp.canvas.getContext('2d');
+    }
+    const s = fp.scale;
+    if (fp.lastChunkY !== msg.y) {
+      fp.lastChunkY = msg.y;
+      fp.prevEndX = 0;
+    }
+    let destX = Math.round(msg.x * s);
+    let destY = Math.round(msg.y * s);
+    if (destX > fp.prevEndX && destX - fp.prevEndX <= 2) destX = fp.prevEndX;
+    if (fp.prevEndY > 0 && destY > fp.prevEndY && destY - fp.prevEndY <= 2) destY = fp.prevEndY;
+    fp.ctx.drawImage(img, destX, destY);
+    fp.prevEndX = Math.max(fp.prevEndX, destX + img.naturalWidth);
+    fp.prevEndY = Math.max(fp.prevEndY, destY + img.naturalHeight);
+    img.src = '';
+  }
+
+  async function fpFinish(masks) {
+    if (!fp || !fp.canvas || !fp.ctx) {
+      fpCleanup();
+      throw new Error(t('err.noImageData'));
+    }
+    await loadMaskStyle();
+    const canvas = fp.canvas;
+    const ctx = fp.ctx;
+    const s = fp.scale;
+
+    (masks || []).forEach(function (m) {
+      let x = Math.round(m.x * s);
+      let y = Math.round(m.y * s);
+      let w = Math.round(m.w * s);
+      let h = Math.round(m.h * s);
+      if (x < 0) { w += x; x = 0; }
+      if (y < 0) { h += y; y = 0; }
+      if (x + w > canvas.width) w = canvas.width - x;
+      if (y + h > canvas.height) h = canvas.height - y;
+      if (w <= 0 || h <= 0) return;
+
+      if (maskStyle.mode === 'color') {
+        ctx.fillStyle = maskStyle.color;
+        ctx.fillRect(x, y, w, h);
+      } else {
+        const block = Math.max(2, maskStyle.block || 12);
+        const sw = Math.max(1, Math.round(w / block));
+        const sh = Math.max(1, Math.round(h / block));
+        const tmp = document.createElement('canvas');
+        tmp.width = sw;
+        tmp.height = sh;
+        const tc = tmp.getContext('2d');
+        tc.drawImage(canvas, x, y, w, h, 0, 0, sw, sh);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(tmp, 0, 0, sw, sh, x, y, w, h);
+        ctx.imageSmoothingEnabled = true;
+      }
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+    fpCleanup();
+    return dataUrl;
+  }
+
   // ============ 消息监听 ============
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
@@ -586,6 +750,52 @@
       });
       msg.dataUrl = null;
       return true;
+    } else if (msg.type === 'get-page-dims') {
+      const de = document.documentElement;
+      sendResponse({
+        ok: true,
+        pageW: Math.max(de.scrollWidth, de.clientWidth),
+        pageH: Math.max(de.scrollHeight, de.clientHeight),
+        vpW: window.innerWidth,
+        vpH: window.innerHeight,
+        dpr: window.devicePixelRatio || 1,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY
+      });
+    } else if (msg.type === 'scroll-to') {
+      try {
+        window.scrollTo(msg.x || 0, msg.y || 0);
+      } catch (e) {}
+      // 等两帧确保渲染完成
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          sendResponse({ ok: true, scrollX: window.scrollX, scrollY: window.scrollY });
+        });
+      });
+      return true;
+    } else if (msg.type === 'fullpage-init') {
+      fpCleanup();
+      fp = { vpW: msg.vpW, vpH: msg.vpH, pageW: msg.pageW, pageH: msg.pageH, dpr: msg.dpr || 1, canvas: null, ctx: null, scale: 1, prevEndX: 0, prevEndY: 0, lastChunkY: null };
+      sendResponse({ ok: true });
+    } else if (msg.type === 'fullpage-chunk') {
+      fpAddChunk(msg).then(function () {
+        sendResponse({ ok: true });
+      }).catch(function (err) {
+        fpCleanup();
+        sendResponse({ ok: false, error: String(err && err.message || err) });
+      });
+      return true;
+    } else if (msg.type === 'fullpage-finish') {
+      fpFinish(msg.masks || []).then(function (dataUrl) {
+        sendResponse({ ok: true, dataUrl: dataUrl });
+      }).catch(function (err) {
+        fpCleanup();
+        sendResponse({ ok: false, error: String(err && err.message || err) });
+      });
+      return true;
+    } else if (msg.type === 'fullpage-abort') {
+      fpCleanup();
+      sendResponse({ ok: true });
     } else if (msg.type === 'deliver-image') {
       if (msg.mode === 'exec') {
         copyViaBestEffort(msg.dataUrl).then(function () {

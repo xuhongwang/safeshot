@@ -19,6 +19,7 @@
       'ui.keyHint': 'Enter 确认 · Esc 取消',
       'ui.cancel': '取消',
       'ui.confirmCapture': '确认截图',
+      'ui.fullPage': '整页',
       'mask.deleteThis': '点击删除此遮罩',
       'mask.auto': '自动扫描遮罩',
 
@@ -26,6 +27,8 @@
       'err.invalidTab': '无效标签页',
       'err.restricted': '浏览器内置页面不支持截图',
       'err.imageProcess': '图片处理失败',
+      'err.fullPageFailed': '整页截图失败',
+      'err.fullPageTooLarge': '页面过长，无法整页截图',
       'err.copyTimeout': '复制超时',
       'err.copyFailed': '复制失败',
       'err.clipWriteFailed': '剪贴板写入失败',
@@ -86,6 +89,8 @@
 
       'rule.password': '密码输入框',
       'rule.apiKey': 'API 密钥',
+      'rule.bearerToken': 'Bearer Token',
+      'rule.authHeader': 'Authorization 头',
       'rule.jwt': 'JWT Token',
       'rule.phone': '手机号',
       'rule.email': '邮箱',
@@ -110,6 +115,7 @@
       'ui.keyHint': 'Enter confirm · Esc cancel',
       'ui.cancel': 'Cancel',
       'ui.confirmCapture': 'Capture',
+      'ui.fullPage': 'Full page',
       'mask.deleteThis': 'Click to remove this mask',
       'mask.auto': 'Auto-scanned mask',
 
@@ -117,6 +123,8 @@
       'err.invalidTab': 'Invalid tab',
       'err.restricted': 'Browser built-in pages cannot be captured',
       'err.imageProcess': 'Image processing failed',
+      'err.fullPageFailed': 'Full-page capture failed',
+      'err.fullPageTooLarge': 'Page too long for full-page capture',
       'err.copyTimeout': 'Copy timed out',
       'err.copyFailed': 'Copy failed',
       'err.clipWriteFailed': 'Clipboard write failed',
@@ -177,6 +185,8 @@
 
       'rule.password': 'Password field',
       'rule.apiKey': 'API key',
+      'rule.bearerToken': 'Bearer token',
+      'rule.authHeader': 'Authorization header',
       'rule.jwt': 'JWT token',
       'rule.phone': 'Phone number',
       'rule.email': 'Email',

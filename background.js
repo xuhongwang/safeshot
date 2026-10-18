@@ -131,22 +131,28 @@ async function startCaptureFlow(tabId) {
   await sendToTab(tabId, { type: 'restore' }).catch(() => {});
   await new Promise(r => setTimeout(r, 100));
 
-  let dataUrl = await doCapture(tab);
+  let finalDataUrl;
 
-  const prepResult = await sendToTab(tabId, {
-    type: 'prepare-image',
-    dataUrl: dataUrl,
-    masks: overlayResult.masks || []
-  });
-  dataUrl = null;
+  if (overlayResult.fullPage) {
+    finalDataUrl = await captureFullPage(tabId, tab, overlayResult.masks || []);
+  } else {
+    let dataUrl = await doCapture(tab);
 
-  if (!prepResult || !prepResult.ok) {
-    await sendToTab(tabId, { type: 'restore' }).catch(() => {});
-    throw new Error(prepResult ? prepResult.error : t('err.imageProcess'));
+    const prepResult = await sendToTab(tabId, {
+      type: 'prepare-image',
+      dataUrl: dataUrl,
+      masks: overlayResult.masks || []
+    });
+    dataUrl = null;
+
+    if (!prepResult || !prepResult.ok) {
+      await sendToTab(tabId, { type: 'restore' }).catch(() => {});
+      throw new Error(prepResult ? prepResult.error : t('err.imageProcess'));
+    }
+
+    finalDataUrl = prepResult.dataUrl;
+    prepResult.dataUrl = null;
   }
-
-  const finalDataUrl = prepResult.dataUrl;
-  prepResult.dataUrl = null;
 
   if (overlayResult.clipMode === 'clipboard' || overlayResult.clipMode === 'exec') {
     try {
@@ -183,6 +189,69 @@ async function startCaptureFlow(tabId) {
       }));
 
   return { ok: true, done: true, mode: result.mode, error: result.error };
+}
+
+const FULLPAGE_MAX_TILES = 40;
+
+async function captureFullPage(tabId, tab, masks) {
+  const dims = await sendToTab(tabId, { type: 'get-page-dims' });
+  if (!dims || !dims.ok) throw new Error(t('err.fullPageFailed'));
+
+  const origScroll = { x: dims.scrollX, y: dims.scrollY };
+  const vpW = dims.vpW;
+  const vpH = dims.vpH;
+  const cols = Math.ceil(dims.pageW / vpW) || 1;
+  const rows = Math.ceil(dims.pageH / vpH) || 1;
+
+  if (cols * rows > FULLPAGE_MAX_TILES) {
+    throw new Error(t('err.fullPageTooLarge'));
+  }
+
+  const initResult = await sendToTab(tabId, {
+    type: 'fullpage-init',
+    vpW: vpW, vpH: vpH, pageW: dims.pageW, pageH: dims.pageH, dpr: dims.dpr
+  });
+  if (!initResult || !initResult.ok) throw new Error(t('err.fullPageFailed'));
+
+  try {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const targetX = Math.min(c * vpW, Math.max(0, dims.pageW - vpW));
+        const targetY = Math.min(r * vpH, Math.max(0, dims.pageH - vpH));
+
+        const pos = await sendToTab(tabId, { type: 'scroll-to', x: targetX, y: targetY });
+        if (!pos || !pos.ok) throw new Error(t('err.fullPageFailed'));
+
+        await new Promise(resolve => setTimeout(resolve, 80));
+
+        // captureVisibleTab 约限 2 次/秒，控制分片间隔避免被拒
+        const chunkUrl = await doCapture(tab);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const chunkResult = await sendToTab(tabId, {
+          type: 'fullpage-chunk',
+          x: pos.scrollX,
+          y: pos.scrollY,
+          dataUrl: chunkUrl
+        });
+        if (!chunkResult || !chunkResult.ok) {
+          throw new Error(chunkResult ? chunkResult.error : t('err.fullPageFailed'));
+        }
+      }
+    }
+
+    await sendToTab(tabId, { type: 'scroll-to', x: origScroll.x, y: origScroll.y }).catch(() => {});
+
+    const fin = await sendToTab(tabId, { type: 'fullpage-finish', masks: masks });
+    if (!fin || !fin.ok) {
+      throw new Error(fin ? fin.error : t('err.fullPageFailed'));
+    }
+    return fin.dataUrl;
+  } catch (e) {
+    await sendToTab(tabId, { type: 'fullpage-abort' }).catch(() => {});
+    await sendToTab(tabId, { type: 'scroll-to', x: origScroll.x, y: origScroll.y }).catch(() => {});
+    throw e;
+  }
 }
 
 async function saveImage(dataUrl) {

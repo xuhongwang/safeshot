@@ -12,14 +12,18 @@ A privacy-first browser screenshot extension. Visually select or auto-detect sen
 
 - **Three ways to launch**: toolbar button, context menu, and keyboard shortcut (default `Alt+Shift+S`, customizable on the settings page)
 - **Visual redaction overlay**: see the mask effect directly on the page; drag to add masks, click an existing mask to remove it
-- **Auto scanning**: detects password fields, API keys, JWTs, phone numbers, emails, internal IPs, database connection strings, private keys, and more
+- **Auto scanning**: detects password fields, API keys, JWTs, phone numbers (with spaces/dashes/international format), emails, internal IPv4/IPv6 addresses, database connection strings, private keys (RSA/EC/DSA/PGP/OpenSSH), and more
+- **Password field tracking**: uses MutationObserver to track password inputs, so they remain detectable after toggling visibility
+- **Input value scanning**: sensitive data in input fields (complete emails, phone numbers, JWTs, API keys, etc.) is also masked
 - **Mask styles**: mosaic (adjustable block size) or solid color (pick your color), composited onto the final screenshot
+- **Full-page capture**: supports long pages via scroll-and-stitch screenshot
 - **Copy straight to the clipboard**: confirmed = copied, works on both HTTPS and HTTP pages; falls back to downloading a PNG if the copy fails
 - **Overlay shortcuts**: `Enter` to confirm, `Esc` to cancel
 - **Custom regex rules**: add your own sensitive-information detection rules
 - **Domain whitelist**: whitelisted sites skip scanning and capture directly
 - **Auto-scan toggle**: when off, you can still capture and mask manually — only automatic detection is skipped
 - **Original-resolution export**: screenshots are generated at the page's native resolution, not a preview thumbnail
+- **Bilingual UI**: interface, prompts, and error messages in Chinese/English, follows browser language by default, manually configurable in settings
 
 ---
 
@@ -80,6 +84,7 @@ A toast at the bottom of the page reports the outcome:
 - Cross-origin iframes, canvas-rendered text, and system-level dialogs cannot be scanned
 - The clipboard may be unavailable in headless browsers or unfocused windows (it automatically falls back to a download)
 - The shortcut cannot be changed by typing inside the extension (Chrome API limitation) — use the browser's shortcut settings page
+- **Showing the password before capturing may not result in redaction**: some websites (e.g., Vue/Element UI) rebuild the input DOM node when toggling password visibility, causing auto-tracking to fail. Recommended to **switch the password back to hidden state before capturing** (then manually show it after redaction), or **manually drag a mask over the password area** in the overlay
 
 ---
 

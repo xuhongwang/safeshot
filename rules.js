@@ -12,10 +12,26 @@
     {
       id: 'api_key',
       type: 'regex',
-      pattern: '(sk_live_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16})',
+      pattern: '(sk-[A-Za-z0-9_-]{16,}|sk_live_[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{22,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|xox[baprs]-[0-9A-Za-z-]{10,}|glpat-[A-Za-z0-9_-]{20,}|npm_[A-Za-z0-9]{36})',
       flags: 'g',
       enabled: true,
       label: 'rule.apiKey'
+    },
+    {
+      id: 'bearer_token',
+      type: 'regex',
+      pattern: '(?:Bearer|Basic|Token)\\s+[A-Za-z0-9._~+/=-]{16,}',
+      flags: 'g',
+      enabled: true,
+      label: 'rule.bearerToken'
+    },
+    {
+      id: 'authorization_header',
+      type: 'regex',
+      pattern: 'Authorization\\s*[:=]\\s*\\S+\\s+\\S+',
+      flags: 'gi',
+      enabled: true,
+      label: 'rule.authHeader'
     },
     {
       id: 'jwt',
@@ -28,7 +44,7 @@
     {
       id: 'phone',
       type: 'regex',
-      pattern: '(?<!\\d)(1[3-9]\\d{9})(?!\\d)',
+      pattern: '(?<!\\d)(?:\\+?86[\\s-]?)?1[3-9](?:[\\s-]?\\d){9}(?!\\d)',
       flags: 'g',
       enabled: true,
       label: 'rule.phone'
@@ -46,6 +62,14 @@
       type: 'regex',
       pattern: '(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2[0-9]|3[01])\\.\\d{1,3}\\.\\d{1,3})',
       flags: 'g',
+      enabled: true,
+      label: 'rule.internalIp'
+    },
+    {
+      id: 'internal_ip6',
+      type: 'regex',
+      pattern: '(?<![0-9A-Za-z])(?:(?:f[cd][0-9a-f]{0,3}|fe[89ab][0-9a-f]{0,3}):[0-9a-f:]{1,39}|::1)(?![0-9A-Za-z:])',
+      flags: 'gi',
       enabled: true,
       label: 'rule.internalIp'
     },
@@ -68,7 +92,7 @@
     {
       id: 'private_key',
       type: 'regex',
-      pattern: '-----BEGIN [A-Z ]*PRIVATE KEY-----',
+      pattern: '-----BEGIN (?:RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY(?: BLOCK)?-----[\\s\\S]*?-----END (?:RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY(?: BLOCK)?-----',
       flags: 'g',
       enabled: true,
       label: 'rule.privateKey'
